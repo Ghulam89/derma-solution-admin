@@ -102,6 +102,7 @@ export default function ConfirmBookingPage() {
     setLoading(true)
     try {
       const basePrice = Number(serviceDetails?.base_price ?? 0)
+<<<<<<< HEAD
       
       // Check if booking has selected_subcategories (treatment subcategories feature)
       let sessionCount = 1
@@ -128,6 +129,12 @@ export default function ConfirmBookingPage() {
         unitPrice = Math.round((basePrice * (1 - getDiscount(booking.package))) * 100) / 100
         totalAmount = Math.round((unitPrice * sessionCount) * 100) / 100
       }
+=======
+      const sessionCount = getSessionCount(booking.package)
+      const discountPercent = Math.round(getDiscount(booking.package) * 100)
+      const unitPrice = Math.round((basePrice * (1 - getDiscount(booking.package))) * 100) / 100
+      const totalAmount = Math.round((unitPrice * sessionCount) * 100) / 100
+>>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 
       const payload = {
         service_id: booking.service_id,

@@ -1,11 +1,17 @@
 "use client"
 import React, { useState, useEffect } from "react"
+<<<<<<< HEAD
 import Image from "next/image"
+=======
+>>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 import { useToast } from "@/hooks/use-toast"
 import ServiceDateSelector from "@/components/services/ServiceDateSelector"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+<<<<<<< HEAD
 import { Checkbox } from "@/components/ui/checkbox"
+=======
+>>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 import {
   Select,
   SelectContent,
@@ -122,6 +128,7 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   }, [service?.id, servicePackages, userInteracted, rescheduleOrder])
 
   const basePrice = Number(service?.base_price ?? 0)
+<<<<<<< HEAD
   
   // Parse treatment subcategories if available
   interface PricingOption {
@@ -190,6 +197,8 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
     return total
   }
   
+=======
+>>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
   const getSessionCount = (label: string) => {
     const m = String(label).match(/(\d+)/)
     return m ? parseInt(m[0], 10) : 1
@@ -210,6 +219,7 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   const formatPrice = (v: number) => `£${v.toFixed(2)}`
 
   const handleBook = async () => {
+<<<<<<< HEAD
     if (hasTreatmentSubcategories && Object.keys(selectedSubcategories).length === 0) {
       toast({
         title: "Treatment Selection Required",
@@ -218,6 +228,8 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
       })
       return
     }
+=======
+>>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
     if (!selectedDoctorId) {
       toast({
         title: "Doctor Selection Required",
@@ -239,6 +251,7 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
     const booking = {
       service_id: service.id,
       service_name: service.name,
+<<<<<<< HEAD
       package: hasTreatmentSubcategories 
         ? Object.keys(selectedSubcategories).map(name => {
             const pricing = selectedSubcategories[name]
@@ -246,6 +259,9 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
           }).join(", ")
         : selectedPackage,
       selected_subcategories: hasTreatmentSubcategories ? selectedSubcategories : {},
+=======
+      package: selectedPackage,
+>>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
       date: selectedDate,
       time: selectedTime,
       doctor_id: selectedDoctorId,
@@ -349,6 +365,7 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
 
   return (
     <div>
+<<<<<<< HEAD
       {hasTreatmentSubcategories ? (
         // Treatment Subcategories Layout (like image)
         <div className="max-w-3xl mx-auto flex flex-col gap-6 mb-8">
@@ -502,6 +519,48 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
           </div>
         </section>
       )}
+=======
+      <section className="max-w-3xl mx-auto mb-8">
+        <div className="bg-muted rounded-xl shadow p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xl font-semibold">Select package</div>
+          </div>
+          {service.description && (
+            <div className="text-muted-foreground text-base mb-4">
+              {service.description}
+            </div>
+          )}
+          <div className="flex flex-col gap-4">
+            {servicePackages.map((p) => {
+              const count = getSessionCount(p)
+              const discount = getDiscount(p)
+              const perSession = basePrice * (1 - discount)
+              const total = perSession * count
+              const totalSave = basePrice * count - total
+              return (
+                <div
+                  key={p}
+                  onClick={() => { setUserInteracted(true); console.log('select package', p); setSelectedPackage(p) }}
+                  className={`border rounded-xl px-4 py-2 flex items-center justify-between hover:shadow-md hover:bg-white hover:text-black transition cursor-pointer ${selectedPackage === p ? "ring-2 ring-offset-2 ring-slate-400" : ""}`}
+                >
+                  <div>
+                    <div className="text-lg font-semibold">{p}</div>
+                    <div className="text-sm text-muted-foreground">{count} × {formatPrice(perSession)} per session</div>
+                    {discount > 0 && (
+                      <div className="text-xs text-green-700 mt-1">Save {Math.round(discount * 100)}% — you save {formatPrice(totalSave)}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold">{formatPrice(perSession)}</div>
+                    <div className="text-muted-foreground text-xs">per session</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+>>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 
       <section className="max-w-3xl mx-auto mb-8">
         <div className="bg-muted rounded-xl shadow p-4">

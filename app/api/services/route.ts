@@ -11,6 +11,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const body = await req.json()
   const supabase = await createClient()
+<<<<<<< HEAD
   
   // Ensure treatment_options is properly formatted as JSONB
   if (body.treatment_options && typeof body.treatment_options === 'string') {
@@ -22,6 +23,8 @@ export async function POST(req: NextRequest) {
     }
   }
   
+=======
+>>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
   const { data, error } = await supabase.from("services").insert([body]).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data, { status: 201 })
