@@ -207,7 +207,7 @@ export default function TreatmentSubcategoriesTable({ services }: TreatmentSubca
                       </table>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
-                        No subcategories added yet. Click "Edit" to add subcategories.
+                        No subcategories added yet. Click &quot;Edit&quot; to add subcategories.
                       </div>
                     )}
                   </div>

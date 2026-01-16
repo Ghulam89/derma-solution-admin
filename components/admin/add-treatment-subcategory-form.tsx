@@ -330,7 +330,7 @@ export default function AddTreatmentSubcategoryForm({ services }: AddTreatmentSu
                   ))}
                   {subcat.pricing.length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-2">
-                      No pricing options. Click "+ Add Price Option" to add.
+                      No pricing options. Click &quot;+ Add Price Option&quot; to add.
                     </p>
                   )}
                 </div>

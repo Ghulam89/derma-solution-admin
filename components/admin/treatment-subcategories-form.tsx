@@ -232,7 +232,7 @@ export default function TreatmentSubcategoriesForm({ service, onSaved }: Treatme
                   ))}
                   {subcat.pricing.length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-2">
-                      No pricing options. Click "+ Add Price Option" to add.
+                      No pricing options. Click &quot;+ Add Price Option&quot; to add.
                     </p>
                   )}
                 </div>
@@ -253,7 +253,7 @@ export default function TreatmentSubcategoriesForm({ service, onSaved }: Treatme
         ))}
         {treatmentSubcategories.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">
-            No subcategories added. Click "Add Subcategory" to create treatment options.
+            No subcategories added. Click &quot;Add Subcategory&quot; to create treatment options.
           </p>
         )}
       </div>
