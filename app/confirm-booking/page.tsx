@@ -102,10 +102,32 @@ export default function ConfirmBookingPage() {
     setLoading(true)
     try {
       const basePrice = Number(serviceDetails?.base_price ?? 0)
-      const sessionCount = getSessionCount(booking.package)
-      const discountPercent = Math.round(getDiscount(booking.package) * 100)
-      const unitPrice = Math.round((basePrice * (1 - getDiscount(booking.package))) * 100) / 100
-      const totalAmount = Math.round((unitPrice * sessionCount) * 100) / 100
+      
+      // Check if booking has selected_subcategories (treatment subcategories feature)
+      let sessionCount = 1
+      let unitPrice = basePrice
+      let discountPercent = 0
+      let totalAmount = basePrice
+      
+      if (booking.selected_subcategories && typeof booking.selected_subcategories === 'object' && Object.keys(booking.selected_subcategories).length > 0) {
+        // Calculate total from selected subcategories (new format: {subcatName: {name, price}})
+        const selectedSubcats = booking.selected_subcategories as { [key: string]: { name: string; price: number } }
+        
+        totalAmount = 0
+        Object.values(selectedSubcats).forEach((pricingOption: any) => {
+          if (pricingOption && pricingOption.price) {
+            totalAmount += pricingOption.price
+          }
+        })
+        unitPrice = totalAmount
+        sessionCount = Object.keys(selectedSubcats).length
+      } else {
+        // Use legacy session-based pricing
+        sessionCount = getSessionCount(booking.package)
+        discountPercent = Math.round(getDiscount(booking.package) * 100)
+        unitPrice = Math.round((basePrice * (1 - getDiscount(booking.package))) * 100) / 100
+        totalAmount = Math.round((unitPrice * sessionCount) * 100) / 100
+      }
 
       const payload = {
         service_id: booking.service_id,

@@ -7,6 +7,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const supabase = await createClient()
   console.info('PUT /api/services/[id] called', { id })
   try {
+    // Ensure treatment_options is properly formatted as JSONB
+    if (body.treatment_options && typeof body.treatment_options === 'string') {
+      try {
+        body.treatment_options = JSON.parse(body.treatment_options)
+      } catch {
+        // If parsing fails, set to empty array
+        body.treatment_options = []
+      }
+    }
+    
     const { data, error } = await supabase.from("services").update(body).eq("id", id).select().single()
     if (error) {
       console.error('Supabase error updating service', { id, body, error })

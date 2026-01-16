@@ -1,9 +1,11 @@
 "use client"
 import React, { useState, useEffect } from "react"
+import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import ServiceDateSelector from "@/components/services/ServiceDateSelector"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
@@ -120,6 +122,74 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   }, [service?.id, servicePackages, userInteracted, rescheduleOrder])
 
   const basePrice = Number(service?.base_price ?? 0)
+  
+  // Parse treatment subcategories if available
+  interface PricingOption {
+    name: string
+    price: number
+  }
+  
+  interface TreatmentSubcategory {
+    name: string
+    image?: string
+    pricing: PricingOption[]
+  }
+  
+  const parseTreatmentSubcategories = (v: any): TreatmentSubcategory[] => {
+    if (!v) return []
+    try {
+      const parsed = typeof v === 'string' ? JSON.parse(v) : v
+      if (!Array.isArray(parsed)) return []
+      // Migrate old format to new format
+      return parsed.map((item: any) => {
+        if (item.title && item.price && !item.pricing) {
+          return {
+            name: item.title,
+            image: item.image || "",
+            pricing: [{ name: "Standard", price: item.price }]
+          }
+        }
+        return {
+          name: item.name || item.title || "",
+          image: item.image || "",
+          pricing: Array.isArray(item.pricing) ? item.pricing : []
+        }
+      })
+    } catch { return [] }
+  }
+  
+  const treatmentSubcategories = parseTreatmentSubcategories((service as any)?.treatment_options)
+  const hasTreatmentSubcategories = treatmentSubcategories.length > 0
+  
+  // State for selected treatment subcategories and pricing options
+  // Format: { subcategoryName: selectedPricingOption }
+  const [selectedSubcategories, setSelectedSubcategories] = useState<{ [key: string]: PricingOption | null }>({})
+  
+  const toggleSubcategoryPricing = (subcatName: string, pricingOption: PricingOption) => {
+    setSelectedSubcategories(prev => {
+      const current = prev[subcatName]
+      if (current && current.name === pricingOption.name && current.price === pricingOption.price) {
+        // Deselect if same option clicked
+        const updated = { ...prev }
+        delete updated[subcatName]
+        return updated
+      }
+      // Select new option
+      return { ...prev, [subcatName]: pricingOption }
+    })
+  }
+  
+  // Calculate total from selected subcategories
+  const calculateSubcategoryTotal = () => {
+    let total = 0
+    Object.values(selectedSubcategories).forEach(pricingOption => {
+      if (pricingOption) {
+        total += pricingOption.price
+      }
+    })
+    return total
+  }
+  
   const getSessionCount = (label: string) => {
     const m = String(label).match(/(\d+)/)
     return m ? parseInt(m[0], 10) : 1
@@ -140,6 +210,14 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   const formatPrice = (v: number) => `£${v.toFixed(2)}`
 
   const handleBook = async () => {
+    if (hasTreatmentSubcategories && Object.keys(selectedSubcategories).length === 0) {
+      toast({
+        title: "Treatment Selection Required",
+        description: "Please select at least one treatment subcategory and pricing option",
+        variant: "destructive",
+      })
+      return
+    }
     if (!selectedDoctorId) {
       toast({
         title: "Doctor Selection Required",
@@ -161,7 +239,13 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
     const booking = {
       service_id: service.id,
       service_name: service.name,
-      package: selectedPackage,
+      package: hasTreatmentSubcategories 
+        ? Object.keys(selectedSubcategories).map(name => {
+            const pricing = selectedSubcategories[name]
+            return pricing ? `${name} - ${pricing.name}` : name
+          }).join(", ")
+        : selectedPackage,
+      selected_subcategories: hasTreatmentSubcategories ? selectedSubcategories : {},
       date: selectedDate,
       time: selectedTime,
       doctor_id: selectedDoctorId,
@@ -265,46 +349,159 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
 
   return (
     <div>
-      <section className="max-w-3xl mx-auto mb-8">
-        <div className="bg-muted rounded-xl shadow p-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-xl font-semibold">Select package</div>
-          </div>
-          {service.description && (
-            <div className="text-muted-foreground text-base mb-4">
-              {service.description}
+      {hasTreatmentSubcategories ? (
+        // Treatment Subcategories Layout (like image)
+        <div className="max-w-3xl mx-auto flex flex-col gap-6 mb-8">
+          {/* Left Panel - Treatment Selection */}
+          <div className="">
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-2xl font-bold mb-6">{service.name}</h2>
+              <div className="space-y-4">
+                {treatmentSubcategories.map((subcat, index) => {
+                  const isSelected = selectedSubcategories[subcat.name] !== null && selectedSubcategories[subcat.name] !== undefined
+                  const selectedPricing = selectedSubcategories[subcat.name]
+                  
+                  return (
+                    <div
+                      key={index}
+                      className="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
+                    >
+                      <div className="flex items-start gap-4 mb-3">
+                        {subcat.image && (
+                          <Image
+                            src={subcat.image}
+                            alt={subcat.name}
+                            width={80}
+                            height={80}
+                            className="rounded-lg object-cover"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div className="font-semibold text-lg mb-2">{subcat.name}</div>
+                          <div className="space-y-2">
+                            {subcat.pricing.map((pricingOption, priceIndex) => {
+                              const isPricingSelected = selectedPricing?.name === pricingOption.name && selectedPricing?.price === pricingOption.price
+                              return (
+                                <div
+                                  key={priceIndex}
+                                  className={`flex items-center gap-3 p-2 rounded border cursor-pointer transition ${
+                                    isPricingSelected ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
+                                  }`}
+                                  onClick={() => toggleSubcategoryPricing(subcat.name, pricingOption)}
+                                >
+                                  <Checkbox
+                                    checked={isPricingSelected}
+                                    onCheckedChange={() => toggleSubcategoryPricing(subcat.name, pricingOption)}
+                                    className="w-4 h-4"
+                                  />
+                                  <div className="flex-1">
+                                    <div className="font-medium">{pricingOption.name}</div>
+                                  </div>
+                                  <div className="font-bold">{formatPrice(pricingOption.price)}</div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          )}
-          <div className="flex flex-col gap-4">
-            {servicePackages.map((p) => {
-              const count = getSessionCount(p)
-              const discount = getDiscount(p)
-              const perSession = basePrice * (1 - discount)
-              const total = perSession * count
-              const totalSave = basePrice * count - total
-              return (
-                <div
-                  key={p}
-                  onClick={() => { setUserInteracted(true); console.log('select package', p); setSelectedPackage(p) }}
-                  className={`border rounded-xl px-4 py-2 flex items-center justify-between hover:shadow-md hover:bg-white hover:text-black transition cursor-pointer ${selectedPackage === p ? "ring-2 ring-offset-2 ring-slate-400" : ""}`}
-                >
-                  <div>
-                    <div className="text-lg font-semibold">{p}</div>
-                    <div className="text-sm text-muted-foreground">{count} × {formatPrice(perSession)} per session</div>
-                    {discount > 0 && (
-                      <div className="text-xs text-green-700 mt-1">Save {Math.round(discount * 100)}% — you save {formatPrice(totalSave)}</div>
-                    )}
+          </div>
+
+          {/* Right Panel - Summary */}
+          <div className="">
+            <div className="bg-white rounded-xl shadow p-6 sticky top-8">
+              <h2 className="text-2xl font-bold mb-4">Summary</h2>
+              <div className="space-y-4 mb-6">
+                {Object.keys(selectedSubcategories).length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No treatments selected</p>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold">{formatPrice(perSession)}</div>
-                    <div className="text-muted-foreground text-xs">per session</div>
-                  </div>
-                </div>
-              )
-            })}
+                ) : (
+                  <>
+                    <div className="border rounded-lg overflow-hidden bg-white">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="text-left px-4 py-2 text-sm font-semibold">Name</th>
+                            <th className="text-right px-4 py-2 text-sm font-semibold">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(selectedSubcategories).map(([subcatName, pricingOption]) => {
+                            if (!pricingOption) return null
+                            return (
+                              <tr key={subcatName} className="border-t">
+                                <td className="px-4 py-2 font-medium">{subcatName} - {pricingOption.name}</td>
+                                <td className="px-4 py-2 text-right font-semibold">{formatPrice(pricingOption.price)}</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="space-y-2 pt-4 border-t">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Number Of Sessions</span>
+                        <span className="font-semibold">1</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xl font-bold pt-2 border-t">
+                        <span>Total</span>
+                        <span>{formatPrice(calculateSubcategoryTotal())}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+      ) : (
+        // Original Session Packages Layout
+        <section className="max-w-3xl mx-auto mb-8">
+          <div className="bg-muted rounded-xl shadow p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xl font-semibold">Select package</div>
+            </div>
+            {service.description && (
+              <div className="text-muted-foreground text-base mb-4">
+                {service.description}
+              </div>
+            )}
+            <div className="flex flex-col gap-4">
+              {servicePackages.map((p) => {
+                const count = getSessionCount(p)
+                const discount = getDiscount(p)
+                const perSession = basePrice * (1 - discount)
+                const total = perSession * count
+                const totalSave = basePrice * count - total
+                return (
+                  <div
+                    key={p}
+                    onClick={() => { setUserInteracted(true); console.log('select package', p); setSelectedPackage(p) }}
+                    className={`border rounded-xl px-4 py-2 flex items-center justify-between hover:shadow-md hover:bg-white hover:text-black transition cursor-pointer ${selectedPackage === p ? "ring-2 ring-offset-2 ring-slate-400" : ""}`}
+                  >
+                    <div>
+                      <div className="text-lg font-semibold">{p}</div>
+                      <div className="text-sm text-muted-foreground">{count} × {formatPrice(perSession)} per session</div>
+                      {discount > 0 && (
+                        <div className="text-xs text-green-700 mt-1">Save {Math.round(discount * 100)}% — you save {formatPrice(totalSave)}</div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">{formatPrice(perSession)}</div>
+                      <div className="text-muted-foreground text-xs">per session</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="max-w-3xl mx-auto mb-8">
         <div className="bg-muted rounded-xl shadow p-4">

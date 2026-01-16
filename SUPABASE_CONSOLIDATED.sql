@@ -173,6 +173,7 @@ CREATE TABLE IF NOT EXISTS public.services (
   thumbnail TEXT,
   base_price NUMERIC(10,2) NOT NULL DEFAULT 0,
   session_options JSONB NOT NULL DEFAULT '[]',
+  treatment_options JSONB NOT NULL DEFAULT '[]',
   duration_minutes INTEGER,
   is_popular BOOLEAN NOT NULL DEFAULT FALSE,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,

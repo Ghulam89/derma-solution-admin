@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Layers,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
@@ -44,6 +45,11 @@ const sidebarLinks = [
     title: "Treatments",
     href: "/admin/services",
     icon: Sparkles,
+  },
+  {
+    title: "Treatment Subcategories",
+    href: "/admin/treatment-subcategories",
+    icon: Layers,
   },
   {
     title: "Doctors",

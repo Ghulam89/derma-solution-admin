@@ -46,6 +46,7 @@ export interface Service {
   thumbnail?: string
   base_price: number
   session_options?: Json // JSON array of session options
+  treatment_options?: Json // JSON array of treatment subcategories: [{title: string, price: number}]
   duration_minutes?: number
   is_popular: boolean
   is_active: boolean
