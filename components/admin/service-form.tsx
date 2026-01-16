@@ -42,10 +42,6 @@ export function ServiceForm({ onServiceSaved, initialValues, categories, onCance
   }
   const [sessionOptions, setSessionOptions] = useState<string[]>(parseSessionOptions(initialValues?.session_options))
   const [timeOptions, setTimeOptions] = useState<string[]>(parseTimeOptions(initialValues?.session_options))
-<<<<<<< HEAD
-  
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 
   // Synchronize form fields when initialValues changes
   useEffect(() => {
@@ -125,10 +121,7 @@ export function ServiceForm({ onServiceSaved, initialValues, categories, onCance
       }
       setUploading(false)
     }
-<<<<<<< HEAD
     
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
     startTransition(async () => {
       try {
         let res
@@ -153,10 +146,6 @@ export function ServiceForm({ onServiceSaved, initialValues, categories, onCance
                 // otherwise keep simple array
                 return sessionOptions
               })(),
-<<<<<<< HEAD
-              treatment_options: null,
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
               thumbnail: finalThumbnail,
             }),
           })
@@ -179,10 +168,6 @@ export function ServiceForm({ onServiceSaved, initialValues, categories, onCance
                 }
                 return sessionOptions
               })(),
-<<<<<<< HEAD
-              treatment_options: null,
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
               thumbnail: finalThumbnail,
             }),
           })
@@ -333,10 +318,6 @@ export function ServiceForm({ onServiceSaved, initialValues, categories, onCance
         <input type="checkbox" checked={isPopular} onChange={e => setIsPopular(e.target.checked)} id="isPopular" className="h-4 w-4 rounded border-input" />
         <label htmlFor="isPopular" className="font-medium text-foreground">Popular</label>
       </div>
-<<<<<<< HEAD
-=======
-      
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 
       <div className="col-span-full flex gap-3">
         <Button type="submit" disabled={isPending || uploading} size="lg" className="flex-1">

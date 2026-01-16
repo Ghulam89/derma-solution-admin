@@ -7,7 +7,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const supabase = await createClient()
   console.info('PUT /api/services/[id] called', { id })
   try {
-<<<<<<< HEAD
     // Ensure treatment_options is properly formatted as JSONB
     if (body.treatment_options && typeof body.treatment_options === 'string') {
       try {
@@ -18,8 +17,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
     
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
     const { data, error } = await supabase.from("services").update(body).eq("id", id).select().single()
     if (error) {
       console.error('Supabase error updating service', { id, body, error })

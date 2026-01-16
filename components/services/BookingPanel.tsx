@@ -1,17 +1,11 @@
 "use client"
 import React, { useState, useEffect } from "react"
-<<<<<<< HEAD
 import Image from "next/image"
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 import { useToast } from "@/hooks/use-toast"
 import ServiceDateSelector from "@/components/services/ServiceDateSelector"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-<<<<<<< HEAD
 import { Checkbox } from "@/components/ui/checkbox"
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 import {
   Select,
   SelectContent,
@@ -128,7 +122,6 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   }, [service?.id, servicePackages, userInteracted, rescheduleOrder])
 
   const basePrice = Number(service?.base_price ?? 0)
-<<<<<<< HEAD
   
   // Parse treatment subcategories if available
   interface PricingOption {
@@ -172,6 +165,21 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   // Format: { subcategoryName: selectedPricingOption }
   const [selectedSubcategories, setSelectedSubcategories] = useState<{ [key: string]: PricingOption | null }>({})
   
+  // State for expanded subcategories (to show pricing options)
+  const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set())
+  
+  const toggleSubcategoryExpanded = (subcatName: string) => {
+    setExpandedSubcategories(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(subcatName)) {
+        newSet.delete(subcatName)
+      } else {
+        newSet.add(subcatName)
+      }
+      return newSet
+    })
+  }
+  
   const toggleSubcategoryPricing = (subcatName: string, pricingOption: PricingOption) => {
     setSelectedSubcategories(prev => {
       const current = prev[subcatName]
@@ -197,8 +205,6 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
     return total
   }
   
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
   const getSessionCount = (label: string) => {
     const m = String(label).match(/(\d+)/)
     return m ? parseInt(m[0], 10) : 1
@@ -219,7 +225,6 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   const formatPrice = (v: number) => `£${v.toFixed(2)}`
 
   const handleBook = async () => {
-<<<<<<< HEAD
     if (hasTreatmentSubcategories && Object.keys(selectedSubcategories).length === 0) {
       toast({
         title: "Treatment Selection Required",
@@ -228,8 +233,6 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
       })
       return
     }
-=======
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
     if (!selectedDoctorId) {
       toast({
         title: "Doctor Selection Required",
@@ -251,7 +254,6 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
     const booking = {
       service_id: service.id,
       service_name: service.name,
-<<<<<<< HEAD
       package: hasTreatmentSubcategories 
         ? Object.keys(selectedSubcategories).map(name => {
             const pricing = selectedSubcategories[name]
@@ -259,9 +261,6 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
           }).join(", ")
         : selectedPackage,
       selected_subcategories: hasTreatmentSubcategories ? selectedSubcategories : {},
-=======
-      package: selectedPackage,
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
       date: selectedDate,
       time: selectedTime,
       doctor_id: selectedDoctorId,
@@ -365,116 +364,192 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
 
   return (
     <div>
-<<<<<<< HEAD
       {hasTreatmentSubcategories ? (
-        // Treatment Subcategories Layout (like image)
-        <div className="max-w-3xl mx-auto flex flex-col gap-6 mb-8">
-          {/* Left Panel - Treatment Selection */}
-          <div className="">
-            <div className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-2xl font-bold mb-6">{service.name}</h2>
-              <div className="space-y-4">
-                {treatmentSubcategories.map((subcat, index) => {
-                  const isSelected = selectedSubcategories[subcat.name] !== null && selectedSubcategories[subcat.name] !== undefined
-                  const selectedPricing = selectedSubcategories[subcat.name]
-                  
-                  return (
+        // Treatment Subcategories Layout - Box Design with Grid
+        <div className="max-w-3xl mx-auto mb-8">
+          <div className="bg-white rounded-xl shadow p-6 mb-6">
+            <h2 className="text-2xl font-bold mb-6 text-left">{service.name}</h2>
+            
+            {/* Treatment Boxes Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {treatmentSubcategories.map((subcat, index) => {
+                const isSelected = selectedSubcategories[subcat.name] !== null && selectedSubcategories[subcat.name] !== undefined
+                const isExpanded = expandedSubcategories.has(subcat.name)
+                const selectedPricing = selectedSubcategories[subcat.name]
+                
+                return (
+                  <div key={index} className="relative">
+                    {/* Treatment Box */}
                     <div
-                      key={index}
-                      className="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
+                      className={`relative rounded-lg overflow-hidden cursor-pointer transition-all transform ${
+                        isSelected ? "ring-4 ring-primary ring-offset-2 scale-105" : "hover:shadow-xl hover:scale-102"
+                      } ${isExpanded ? "mb-4" : ""}`}
+                      onClick={() => toggleSubcategoryExpanded(subcat.name)}
                     >
-                      <div className="flex items-start gap-4 mb-3">
-                        {subcat.image && (
-                          <Image
-                            src={subcat.image}
-                            alt={subcat.name}
-                            width={80}
-                            height={80}
-                            className="rounded-lg object-cover"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <div className="font-semibold text-lg mb-2">{subcat.name}</div>
-                          <div className="space-y-2">
-                            {subcat.pricing.map((pricingOption, priceIndex) => {
-                              const isPricingSelected = selectedPricing?.name === pricingOption.name && selectedPricing?.price === pricingOption.price
-                              return (
-                                <div
-                                  key={priceIndex}
-                                  className={`flex items-center gap-3 p-2 rounded border cursor-pointer transition ${
-                                    isPricingSelected ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
-                                  }`}
-                                  onClick={() => toggleSubcategoryPricing(subcat.name, pricingOption)}
-                                >
-                                  <Checkbox
-                                    checked={isPricingSelected}
-                                    onCheckedChange={() => toggleSubcategoryPricing(subcat.name, pricingOption)}
-                                    className="w-4 h-4"
-                                  />
-                                  <div className="flex-1">
-                                    <div className="font-medium">{pricingOption.name}</div>
-                                  </div>
-                                  <div className="font-bold">{formatPrice(pricingOption.price)}</div>
-                                </div>
-                              )
-                            })}
+                      {/* Image with Semi-Transparent Teal/Mint Green Overlay */}
+                      {subcat.image && subcat.image.trim() !== "" ? (
+                        <div className="relative w-full aspect-square overflow-hidden bg-gray-200">
+                          {/* Background Image - Using both Next Image and fallback */}
+                          <div className="absolute inset-0">
+                            <Image
+                              src={subcat.image}
+                              alt={subcat.name}
+                              fill
+                              className="object-cover"
+                              priority={index < 4}
+                              unoptimized
+                              onError={(e) => {
+                                console.error('Image failed to load:', subcat.image)
+                                // Fallback to regular img tag if Next Image fails
+                                const target = e.target as HTMLImageElement
+                                if (target) {
+                                  target.style.display = 'none'
+                                }
+                              }}
+                            />
+                            {/* Fallback img tag for better compatibility */}
+                            <img
+                              src={subcat.image}
+                              alt={subcat.name}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error('Fallback image also failed:', subcat.image)
+                                const target = e.target as HTMLImageElement
+                                if (target) {
+                                  target.style.display = 'none'
+                                }
+                              }}
+                            />
+                          </div>
+                          {/* Very Light Semi-Transparent Teal/Mint Green Overlay - Background image clearly visible */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-teal-500/25 via-teal-500/20 to-teal-600/25 flex items-center justify-center pointer-events-none">
+                            <h3 className="text-white font-bold text-lg md:text-xl text-center px-3 drop-shadow-2xl z-10">
+                              {subcat.name}
+                            </h3>
+                          </div>
+                          {/* Selected Indicator */}
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 bg-primary text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg shadow-lg z-20 pointer-events-none">
+                              ✓
+                            </div>
+                          )}
+                          {/* Expand Indicator */}
+                          <div className="absolute bottom-2 right-2 bg-white/90 text-teal-600 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-md z-20 cursor-pointer hover:bg-white transition pointer-events-auto">
+                            {isExpanded ? "−" : "+"}
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="w-full aspect-square bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center relative">
+                          <h3 className="text-white font-bold text-lg md:text-xl text-center px-3">
+                            {subcat.name}
+                          </h3>
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 bg-primary text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg shadow-lg z-10">
+                              ✓
+                            </div>
+                          )}
+                          <div className="absolute bottom-2 right-2 bg-white/90 text-teal-600 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-md z-10 cursor-pointer hover:bg-white transition">
+                            {isExpanded ? "−" : "+"}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )
-                })}
-              </div>
+                    
+                    {/* Expanded Pricing Options - Dropdown Style with Scroll */}
+                    {isExpanded && (
+                      <div className="mt-3 bg-white border-2 border-teal-200 rounded-xl p-4 shadow-xl animate-in slide-in-from-top-2 duration-300">
+                        <div className="mb-3">
+                          <Label className="text-base font-semibold text-gray-700">Select Option:</Label>
+                        </div>
+                        <Select
+                          value={selectedPricing ? `${selectedPricing.name}|${selectedPricing.price}` : undefined}
+                          onValueChange={(value) => {
+                            const [name, priceStr] = value.split('|')
+                            const price = parseFloat(priceStr)
+                            const pricingOption = subcat.pricing.find(p => p.name === name && p.price === price)
+                            if (pricingOption) {
+                              toggleSubcategoryPricing(subcat.name, pricingOption)
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full bg-white">
+                            <SelectValue placeholder="Select a pricing option" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white max-h-[300px] overflow-y-auto">
+                            {subcat.pricing.length === 0 ? (
+                              <SelectItem value="__no_options__" disabled>
+                                No pricing options available
+                              </SelectItem>
+                            ) : (
+                              subcat.pricing.map((pricingOption, priceIndex) => {
+                                const optionValue = `${pricingOption.name}|${pricingOption.price}`
+                                return (
+                                  <SelectItem key={priceIndex} value={optionValue}>
+                                    <div className="flex items-center justify-between w-full">
+                                      <span className="font-medium">{pricingOption.name}</span>
+                                      <span className="ml-4 font-bold text-primary">{formatPrice(pricingOption.price)}</span>
+                                    </div>
+                                  </SelectItem>
+                                )
+                              })
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {selectedPricing && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">Selected:</span>
+                              <span className="font-semibold text-primary">{selectedPricing.name} - {formatPrice(selectedPricing.price)}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
 
-          {/* Right Panel - Summary */}
-          <div className="">
-            <div className="bg-white rounded-xl shadow p-6 sticky top-8">
+          {/* Summary Section */}
+          {Object.keys(selectedSubcategories).length > 0 && (
+            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
               <h2 className="text-2xl font-bold mb-4">Summary</h2>
-              <div className="space-y-4 mb-6">
-                {Object.keys(selectedSubcategories).length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No treatments selected</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="border rounded-lg overflow-hidden bg-white">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="text-left px-4 py-2 text-sm font-semibold">Name</th>
-                            <th className="text-right px-4 py-2 text-sm font-semibold">Total</th>
+              <div className="space-y-4">
+                <div className="border rounded-lg overflow-hidden bg-white">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left px-4 py-2 text-sm font-semibold">Treatment</th>
+                        <th className="text-right px-4 py-2 text-sm font-semibold">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(selectedSubcategories).map(([subcatName, pricingOption]) => {
+                        if (!pricingOption) return null
+                        return (
+                          <tr key={subcatName} className="border-t">
+                            <td className="px-4 py-2 font-medium">{subcatName} - {pricingOption.name}</td>
+                            <td className="px-4 py-2 text-right font-semibold">{formatPrice(pricingOption.price)}</td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {Object.entries(selectedSubcategories).map(([subcatName, pricingOption]) => {
-                            if (!pricingOption) return null
-                            return (
-                              <tr key={subcatName} className="border-t">
-                                <td className="px-4 py-2 font-medium">{subcatName} - {pricingOption.name}</td>
-                                <td className="px-4 py-2 text-right font-semibold">{formatPrice(pricingOption.price)}</td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="space-y-2 pt-4 border-t">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Number Of Sessions</span>
-                        <span className="font-semibold">1</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xl font-bold pt-2 border-t">
-                        <span>Total</span>
-                        <span>{formatPrice(calculateSubcategoryTotal())}</span>
-                      </div>
-                    </div>
-                  </>
-                )}
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="space-y-2 pt-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Number Of Sessions</span>
+                    <span className="font-semibold">{Object.keys(selectedSubcategories).length}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xl font-bold pt-2 border-t">
+                    <span>Total</span>
+                    <span className="text-primary">{formatPrice(calculateSubcategoryTotal())}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       ) : (
         // Original Session Packages Layout
@@ -519,48 +594,6 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
           </div>
         </section>
       )}
-=======
-      <section className="max-w-3xl mx-auto mb-8">
-        <div className="bg-muted rounded-xl shadow p-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-xl font-semibold">Select package</div>
-          </div>
-          {service.description && (
-            <div className="text-muted-foreground text-base mb-4">
-              {service.description}
-            </div>
-          )}
-          <div className="flex flex-col gap-4">
-            {servicePackages.map((p) => {
-              const count = getSessionCount(p)
-              const discount = getDiscount(p)
-              const perSession = basePrice * (1 - discount)
-              const total = perSession * count
-              const totalSave = basePrice * count - total
-              return (
-                <div
-                  key={p}
-                  onClick={() => { setUserInteracted(true); console.log('select package', p); setSelectedPackage(p) }}
-                  className={`border rounded-xl px-4 py-2 flex items-center justify-between hover:shadow-md hover:bg-white hover:text-black transition cursor-pointer ${selectedPackage === p ? "ring-2 ring-offset-2 ring-slate-400" : ""}`}
-                >
-                  <div>
-                    <div className="text-lg font-semibold">{p}</div>
-                    <div className="text-sm text-muted-foreground">{count} × {formatPrice(perSession)} per session</div>
-                    {discount > 0 && (
-                      <div className="text-xs text-green-700 mt-1">Save {Math.round(discount * 100)}% — you save {formatPrice(totalSave)}</div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold">{formatPrice(perSession)}</div>
-                    <div className="text-muted-foreground text-xs">per session</div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
->>>>>>> 2f9c51c3c2d6dfe2ad80bd0f2fa3476774082d3c
 
       <section className="max-w-3xl mx-auto mb-8">
         <div className="bg-muted rounded-xl shadow p-4">
@@ -609,8 +642,14 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
         setSelectedTime(s.time || null)
       }} />
 
+      {/* Book Button */}
       <div className="flex justify-center items-center my-8">
-        <Button onClick={handleBook} className="bg-[#333] text-white text-lg font-semibold rounded-full px-10 py-4 shadow-md hover:bg-[#222] transition-all" style={{ minWidth: 320 }} disabled={loading}>
+        <Button 
+          onClick={handleBook} 
+          className="bg-[#333] text-white text-lg font-semibold rounded-full px-10 py-4 shadow-md hover:bg-[#222] transition-all" 
+          style={{ minWidth: 320 }} 
+          disabled={loading || (hasTreatmentSubcategories && Object.keys(selectedSubcategories).length === 0) || !selectedDoctorId || !selectedDate || !selectedTime}
+        >
           {loading ? (rescheduleOrder ? "Updating..." : "Booking...") : (rescheduleOrder ? "Update Your Booking" : "Book Treatment")}
         </Button>
       </div>
