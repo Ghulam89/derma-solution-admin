@@ -2,33 +2,31 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 async function hmacSha256Base64Url(payload: string, secret: string) {
-  // Prefer Web Crypto (Edge/Browser). Fallback to dynamic Node import when available.
+  // Edge Runtime: Use Web Crypto API (always available in Edge Runtime)
   const enc = new TextEncoder()
   const data = enc.encode(payload)
 
-  if (typeof globalThis !== 'undefined' && (globalThis as any).crypto && (globalThis as any).crypto.subtle) {
-    const key = await (globalThis as any).crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-    const sigBuf = await (globalThis as any).crypto.subtle.sign('HMAC', key, data)
-    const bytes = new Uint8Array(sigBuf as ArrayBuffer)
-    // base64url encode
-    if (typeof Buffer !== 'undefined') {
-      return Buffer.from(bytes).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-    }
-    let binary = ''
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
-    const b64 = (globalThis as any).btoa(binary)
-    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-  }
-
-  // Node fallback (dynamic import to avoid static Node import in Edge)
-  try {
-    const crypto = await import('crypto')
-    // Node's crypto supports base64url digest directly
-    return crypto.createHmac('sha256', secret).update(payload).digest('base64url')
-  } catch {
-    // As a last resort, return empty signature
+  // Web Crypto API is available in Edge Runtime
+  const crypto = globalThis.crypto
+  if (!crypto?.subtle) {
+    // Should never happen in Edge Runtime, but fail gracefully
     return ''
   }
+
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const sigBuf = await crypto.subtle.sign('HMAC', key, data)
+  const bytes = new Uint8Array(sigBuf as ArrayBuffer)
+  
+  // base64url encode - use Buffer if available (Edge Runtime has it), otherwise use btoa
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(bytes).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  }
+  
+  // Fallback to manual base64 encoding
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+  const b64 = globalThis.btoa(binary)
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 export async function updateSession(request: NextRequest) {
