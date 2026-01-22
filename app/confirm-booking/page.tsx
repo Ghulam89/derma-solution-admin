@@ -176,7 +176,7 @@ export default function ConfirmBookingPage() {
     <>
       <div className="max-w-2xl mx-auto p-8">
       <div className="mb-4">
-        <Button variant="ghost" onClick={() => router.push(serviceDetails?.slug ? `/services/${serviceDetails.slug}` : '/services')}>← Back to Services</Button>
+        <Button variant="ghost" onClick={() => router.push(serviceDetails?.id ? `/services/${serviceDetails.id}` : '/services')}>← Back to Services</Button>
       </div>
       <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-primary/20">
         <h2 className="text-2xl font-bold mb-6">Review & Confirm Your Booking</h2>

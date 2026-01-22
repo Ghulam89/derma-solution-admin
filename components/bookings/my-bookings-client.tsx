@@ -96,8 +96,8 @@ export default function MyBookingsClient({ customerId }: Props) {
                         variant="outline"
                         className="flex items-center gap-2"
                         onClick={() => {
-                          if (upcomingOrder?.service?.slug && upcomingOrder?.id) {
-                            window.location.href = `/services/${upcomingOrder.service.slug}?reschedule=${upcomingOrder.id}`;
+                          if (upcomingOrder?.service?.id && upcomingOrder?.id) {
+                            window.location.href = `/services/${upcomingOrder.service.id}?reschedule=${upcomingOrder.id}`;
                           }
                         }}
                       >

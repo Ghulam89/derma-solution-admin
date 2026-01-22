@@ -28,15 +28,53 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 })
     }
 
-    // Get pagination params
+    // Get pagination params and search query
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1', 10) || 1
     const pageSize = parseInt(url.searchParams.get('pageSize') || '20', 10) || 20
+    const searchQuery = url.searchParams.get('search') || ''
+    const statusFilter = url.searchParams.get('status') || ''
 
-    // Fetch all orders (admin has access to all orders via RLS)
-    const { data: orders } = await getOrdersPaginated(page, pageSize, false)
+    // Build query with search and filters
+    const start = (page - 1) * pageSize
+    const end = start + pageSize - 1
 
-    return NextResponse.json(orders || [], { status: 200 })
+    let query = supabase
+      .from('orders')
+      .select(`
+        *,
+        service:services(
+          *,
+          category:categories(*)
+        ),
+        customer:profiles(*),
+        doctor:doctors(*)
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+
+    // Apply status filter
+    if (statusFilter && ['pending', 'confirmed', 'completed', 'cancelled'].includes(statusFilter)) {
+      query = query.eq('status', statusFilter)
+    }
+
+    // Apply search filter (search in customer name, email, service title)
+    if (searchQuery && searchQuery.trim().length > 0) {
+      const term = searchQuery.trim()
+      query = query.or(`customer_name.ilike.%${term}%,customer_email.ilike.%${term}%,service_title.ilike.%${term}%`)
+    }
+
+    const { data, error, count } = await query.range(start, end)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ 
+      data: data || [], 
+      count: count || 0,
+      page,
+      pageSize 
+    }, { status: 200 })
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 })
   }
@@ -270,17 +308,126 @@ export async function POST(req: NextRequest) {
       status: 'pending', // Default to pending
     }
 
-    const { data: inserted, error } = await supabase
-      .from('orders')
-      .insert([insertObj])
-      .select()
-      .single()
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    // Support multiple bookings creation
+    const bookings = body.bookings || [insertObj]
+    
+    // Validate all bookings
+    for (const booking of bookings) {
+      if (!booking.customer_email || !booking.customer_name) {
+        return NextResponse.json({ error: "All bookings must have customer email and name" }, { status: 400 })
+      }
+      if (!booking.service_id || !booking.booking_date || !booking.booking_time) {
+        return NextResponse.json({ error: "All bookings must have service, date, and time" }, { status: 400 })
+      }
     }
 
-    return NextResponse.json(inserted, { status: 201 })
+    // Process each booking
+    const results = []
+    const errors = []
+
+    for (const bookingData of bookings) {
+      // Find or create customer for this booking
+      let targetCustomerId: string | null = bookingData.customer_id
+
+      if (!targetCustomerId) {
+        const { data: existingCustomer } = await supabase
+          .from('profiles')
+          .select('id, email, first_name, last_name')
+          .eq('email', bookingData.customer_email)
+          .maybeSingle()
+
+        if (existingCustomer) {
+          targetCustomerId = existingCustomer.id
+        } else {
+          errors.push({ email: bookingData.customer_email, error: 'Customer not found' })
+          continue
+        }
+      }
+
+      // Fetch service details
+      const { data: service } = await supabase
+        .from('services')
+        .select('base_price, name')
+        .eq('id', bookingData.service_id)
+        .single()
+
+      if (!service) {
+        errors.push({ service_id: bookingData.service_id, error: 'Service not found' })
+        continue
+      }
+
+      // Calculate pricing if not provided
+      let sessionCount = bookingData.session_count || 1
+      let unitPrice = bookingData.unit_price
+      let discountPercent = bookingData.discount_percent || 0
+      let totalAmount = bookingData.total_amount
+
+      if (!unitPrice || !totalAmount) {
+        const basePriceNum = Number(service.base_price ?? 0)
+        if (!discountPercent && sessionCount > 1) {
+          switch (sessionCount) {
+            case 3: discountPercent = 25; break
+            case 6: discountPercent = 35; break
+            case 10: discountPercent = 45; break
+          }
+        }
+        unitPrice = unitPrice || Math.round((basePriceNum * (1 - discountPercent / 100)) * 100) / 100
+        totalAmount = totalAmount || Number(unitPrice) * sessionCount
+      }
+
+      // Parse booking date and time
+      const bookingDate = parseBookingDate(bookingData.booking_date || bookingData.date)
+      const bookingTime = parseBookingTime(bookingData.booking_time || bookingData.time)
+
+      if (!bookingDate || !bookingTime) {
+        errors.push({ email: bookingData.customer_email, error: 'Invalid booking date or time' })
+        continue
+      }
+
+      const finalBooking = {
+        customer_id: targetCustomerId,
+        service_id: bookingData.service_id,
+        doctor_id: bookingData.doctor_id || null,
+        service_title: bookingData.service_title || service.name || '',
+        customer_name: bookingData.customer_name,
+        customer_email: bookingData.customer_email,
+        customer_phone: bookingData.customer_phone || null,
+        address: bookingData.address || null,
+        session_count: sessionCount,
+        unit_price: unitPrice,
+        discount_percent: Math.round(discountPercent),
+        total_amount: totalAmount,
+        booking_date: bookingDate,
+        booking_time: bookingTime,
+        notes: bookingData.notes || null,
+        status: bookingData.status || 'pending',
+      }
+
+      const { data: inserted, error: insertError } = await supabase
+        .from('orders')
+        .insert([finalBooking])
+        .select()
+        .single()
+
+      if (insertError) {
+        errors.push({ email: bookingData.customer_email, error: insertError.message })
+      } else {
+        results.push(inserted)
+      }
+    }
+
+    if (results.length === 0 && errors.length > 0) {
+      return NextResponse.json({ 
+        error: 'Failed to create bookings', 
+        errors 
+      }, { status: 400 })
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      created: results,
+      errors: errors.length > 0 ? errors : undefined
+    }, { status: 201 })
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 })
   }

@@ -3,14 +3,14 @@ import { RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
 
-export default function RescheduleButton({ slug, orderId }: { slug: string, orderId: string }) {
+export default function RescheduleButton({ serviceId, orderId }: { serviceId: string, orderId: string }) {
   return (
     <Button
       variant="outline"
       className="flex items-center gap-2"
       onClick={() => {
-        if (slug && orderId) {
-          window.location.href = `/services/${slug}?reschedule=${orderId}`;
+        if (serviceId && orderId) {
+          window.location.href = `/services/${serviceId}?reschedule=${orderId}`;
         }
       }}
     >

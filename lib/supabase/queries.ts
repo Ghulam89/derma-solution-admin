@@ -171,18 +171,18 @@ export async function getOrders() {
 }
 
 // Paginated orders with optional short-term cache. Returns { data, count }
-export async function getOrdersPaginated(page: number = 1, pageSize: number = 20, useCache: boolean = true) {
+export async function getOrdersPaginated(page: number = 1, pageSize: number = 20, useCache: boolean = true, statusFilter?: string, searchQuery?: string) {
   const supabase = await createClient()
   const start = (page - 1) * pageSize
   const end = start + pageSize - 1
 
-  const cacheKey = `orders:page=${page}:size=${pageSize}`
+  const cacheKey = `orders:page=${page}:size=${pageSize}:status=${statusFilter || ''}:search=${searchQuery || ''}`
   if (useCache) {
     const cached = cacheGet(cacheKey)
     if (cached) return cached
   }
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('orders')
     .select(`
       *,
@@ -194,7 +194,19 @@ export async function getOrdersPaginated(page: number = 1, pageSize: number = 20
       doctor:doctors(*)
     `, { count: 'exact' })
     .order('created_at', { ascending: false })
-    .range(start, end)
+
+  // Apply status filter
+  if (statusFilter && ['pending', 'confirmed', 'completed', 'cancelled'].includes(statusFilter)) {
+    query = query.eq('status', statusFilter)
+  }
+
+  // Apply search filter
+  if (searchQuery && searchQuery.trim().length > 0) {
+    const term = searchQuery.trim()
+    query = query.or(`customer_name.ilike.%${term}%,customer_email.ilike.%${term}%,service_title.ilike.%${term}%`)
+  }
+
+  const { data, error, count } = await query.range(start, end)
 
   if (error) throw error
 

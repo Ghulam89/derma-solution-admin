@@ -14,10 +14,11 @@ export default async function ServiceDetailPage({ params, searchParams }: { para
 
   const supabase = await createClient();
   // Fetch service and optional reschedule order in parallel to avoid SSR waterfall
+  // Use ID instead of slug - slug can be either ID or slug for backward compatibility
   const servicePromise = supabase
     .from("services")
     .select(`*, category:categories(*)`)
-    .eq("slug", slug)
+    .or(`id.eq.${slug},slug.eq.${slug}`)
     .maybeSingle();
 
   const orderPromise = rescheduleId

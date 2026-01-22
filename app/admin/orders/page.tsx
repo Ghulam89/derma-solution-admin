@@ -5,16 +5,18 @@ import { getOrdersPaginated } from "@/lib/supabase/queries"
 import { OrdersTable } from "@/components/admin/orders-table"
 import { OrdersPageHeader } from "@/components/admin/orders-page-header"
 
-async function OrdersList({ page }: { page: number }) {
-  const { data: orders, count } = await getOrdersPaginated(page, 20)
+async function OrdersList({ page, statusFilter, searchQuery }: { page: number, statusFilter?: string, searchQuery?: string }) {
+  const { data: orders, count } = await getOrdersPaginated(page, 20, false, statusFilter, searchQuery)
   return (
     <OrdersTable orders={orders} currentPage={page} totalCount={count} pageSize={20} />
   )
 }
 
-export default async function OrdersPage({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
+export default async function OrdersPage({ searchParams }: { searchParams?: Promise<{ page?: string, status?: string, search?: string }> }) {
   const resolvedSearchParams = await searchParams;
   const page = parseInt(resolvedSearchParams?.page || "1", 10) || 1
+  const statusFilter = resolvedSearchParams?.status || ''
+  const searchQuery = resolvedSearchParams?.search || ''
 
   return (
     <div className="p-6 space-y-6">
@@ -35,7 +37,7 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Prom
             }
           >
             {/* Server component fetches the page and renders the client table */}
-            <OrdersList page={page} />
+            <OrdersList page={page} statusFilter={statusFilter} searchQuery={searchQuery} />
           </Suspense>
         </CardContent>
       </Card>

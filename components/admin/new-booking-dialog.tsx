@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -41,11 +41,17 @@ export function NewBookingDialog({
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [loadingServices, setLoadingServices] = useState(false)
   const [loadingDoctors, setLoadingDoctors] = useState(false)
+  const [searchingCustomers, setSearchingCustomers] = useState(false)
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("")
+  const [customerSearchResults, setCustomerSearchResults] = useState<any[]>([])
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false)
+  const customerSearchRef = useRef<HTMLDivElement>(null)
 
   // Form fields
   const [customerName, setCustomerName] = useState("")
   const [customerEmail, setCustomerEmail] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
+  const [customerId, setCustomerId] = useState<string | null>(null)
   const [selectedServiceId, setSelectedServiceId] = useState("")
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>(defaultDoctorId || "")
   const [selectedSessions, setSelectedSessions] = useState("1")
@@ -53,6 +59,23 @@ export function NewBookingDialog({
   const [bookingTime, setBookingTime] = useState("")
   const [address, setAddress] = useState("")
   const [notes, setNotes] = useState("")
+
+  // Handle click outside to close customer search dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (customerSearchRef.current && !customerSearchRef.current.contains(event.target as Node)) {
+        setShowCustomerSearch(false)
+      }
+    }
+
+    if (showCustomerSearch) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showCustomerSearch])
 
   // Load services and doctors when dialog opens
   useEffect(() => {
@@ -68,6 +91,10 @@ export function NewBookingDialog({
       setCustomerName("")
       setCustomerEmail("")
       setCustomerPhone("")
+      setCustomerId(null)
+      setCustomerSearchQuery("")
+      setCustomerSearchResults([])
+      setShowCustomerSearch(false)
       setSelectedServiceId("")
       setSelectedDoctorId(defaultDoctorId || "")
       setSelectedSessions("1")
@@ -93,6 +120,47 @@ export function NewBookingDialog({
     } finally {
       setLoadingDoctors(false)
     }
+  }
+
+  const searchCustomers = async (query: string) => {
+    if (!query || query.trim().length < 2) {
+      setCustomerSearchResults([])
+      return
+    }
+
+    setSearchingCustomers(true)
+    try {
+      const res = await fetch(`/api/admin/users?q=${encodeURIComponent(query)}&page=1&size=10`)
+      if (res.ok) {
+        const data = await res.json()
+        setCustomerSearchResults(data.data || [])
+      }
+    } catch (error) {
+      console.error("Failed to search customers:", error)
+    } finally {
+      setSearchingCustomers(false)
+    }
+  }
+
+  const handleCustomerSearchChange = (value: string) => {
+    setCustomerSearchQuery(value)
+    if (value.trim().length >= 2) {
+      searchCustomers(value)
+      setShowCustomerSearch(true)
+    } else {
+      setShowCustomerSearch(false)
+      setCustomerSearchResults([])
+    }
+  }
+
+  const selectCustomer = (customer: any) => {
+    setCustomerId(customer.id)
+    setCustomerName(`${customer.first_name || ''} ${customer.last_name || ''}`.trim())
+    setCustomerEmail(customer.email || '')
+    setCustomerPhone(customer.phone || customer.phone_number || '')
+    setCustomerSearchQuery("")
+    setShowCustomerSearch(false)
+    setCustomerSearchResults([])
   }
 
   // Load selected service details
@@ -212,6 +280,7 @@ export function NewBookingDialog({
       const calculatedTotal = unitPrice * sessionsNum
 
       const payload = {
+        customer_id: customerId || null,
         customer_name: customerName,
         customer_email: customerEmail,
         customer_phone: customerPhone || null,
@@ -250,6 +319,10 @@ export function NewBookingDialog({
       setCustomerName("")
       setCustomerEmail("")
       setCustomerPhone("")
+      setCustomerId(null)
+      setCustomerSearchQuery("")
+      setCustomerSearchResults([])
+      setShowCustomerSearch(false)
       setSelectedServiceId("")
       setSelectedDoctorId(defaultDoctorId || "")
       setSelectedSessions("1")
@@ -312,6 +385,42 @@ export function NewBookingDialog({
           <div className="space-y-4">
             <h3 className="text-base font-semibold text-foreground">Customer Details</h3>
             <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="customerSearch">Search Existing Customer (Optional)</Label>
+                <div className="relative" ref={customerSearchRef}>
+                  <Input
+                    id="customerSearch"
+                    value={customerSearchQuery}
+                    onChange={(e) => handleCustomerSearchChange(e.target.value)}
+                    onFocus={() => {
+                      if (customerSearchQuery.trim().length >= 2 && customerSearchResults.length > 0) {
+                        setShowCustomerSearch(true)
+                      }
+                    }}
+                    placeholder="Search by name or email..."
+                    className="w-full"
+                  />
+                  {showCustomerSearch && customerSearchResults.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-background border border-input rounded-md shadow-lg max-h-60 overflow-auto">
+                      {customerSearchResults.map((customer) => (
+                        <div
+                          key={customer.id}
+                          onClick={() => selectCustomer(customer)}
+                          className="px-4 py-2 hover:bg-muted cursor-pointer border-b border-input last:border-b-0 transition-colors"
+                        >
+                          <div className="font-medium text-foreground">{customer.first_name} {customer.last_name}</div>
+                          <div className="text-sm text-muted-foreground">{customer.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {searchingCustomers && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
+                      Searching...
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="customerName">Full Name *</Label>
                 <Input

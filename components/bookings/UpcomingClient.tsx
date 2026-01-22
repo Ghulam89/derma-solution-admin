@@ -33,8 +33,8 @@ export default function UpcomingClient({ booking_date, booking_time, service, se
         <div className="text-base font-semibold text-right">{timeLabel}</div>
         <div className="flex gap-2 bottom-4">
           <Button variant="ghost" className="capitalize border border-input bg-background hover:bg-muted">Cancel</Button>
-          {service?.slug && orderId && (
-            <RescheduleButton slug={service.slug} orderId={orderId} />
+          {service?.id && orderId && (
+            <RescheduleButton serviceId={service.id} orderId={orderId} />
           )}
         </div>
       </div>
