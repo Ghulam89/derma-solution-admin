@@ -24,6 +24,23 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Suppress webpack warnings for Supabase (known Edge Runtime warnings)
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.ignoreWarnings = [
+        ...(config.ignoreWarnings || []),
+        { module: /node_modules\/@supabase/ },
+        { message: /A Node\.js API is used/ },
+      ];
+    }
+    return config;
+  },
+  // Logging configuration to reduce build noise
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);
