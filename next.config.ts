@@ -26,20 +26,28 @@ const nextConfig: NextConfig = {
   },
   // Suppress webpack warnings for Supabase (known Edge Runtime warnings)
   webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.ignoreWarnings = [
-        ...(config.ignoreWarnings || []),
-        { module: /node_modules\/@supabase/ },
-        { message: /A Node\.js API is used/ },
-      ];
+    // Suppress warnings for all builds (both server and client)
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /node_modules\/@supabase/ },
+      { message: /A Node\.js API is used/ },
+      { message: /process\.version/ },
+      { message: /process\.versions/ },
+      // Suppress webpack cache performance warnings
+      { message: /Serializing big strings/ },
+      { message: /PackFileCacheStrategy/ },
+    ];
+    
+    // Optimize webpack cache settings to reduce serialization warnings
+    if (config.cache && typeof config.cache === 'object') {
+      config.cache = {
+        ...config.cache,
+        compression: 'gzip', // Use compression for cache
+        maxMemoryGenerations: 1, // Reduce memory generations
+      };
     }
+    
     return config;
-  },
-  // Logging configuration to reduce build noise
-  logging: {
-    fetches: {
-      fullUrl: false,
-    },
   },
 };
 
