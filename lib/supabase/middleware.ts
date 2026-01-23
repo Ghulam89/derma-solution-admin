@@ -34,13 +34,9 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // Polyfill process.version for Edge Runtime compatibility
-  if (typeof process === 'undefined') {
-    (globalThis as any).process = { version: 'v18.0.0' }
-  } else if (!(process as any).version) {
-    (process as any).version = 'v18.0.0'
-  }
-
+  // Note: Supabase library may show warnings about Node.js APIs in Edge Runtime,
+  // but this is expected and doesn't affect functionality. The @supabase/ssr
+  // package is designed to work in Edge Runtime despite these warnings.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
