@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Test connection by checking if profiles table is accessible
-    const { data: testData, error: testError } = await supabaseAdmin
+    const { error: testError } = await supabaseAdmin
       .from('profiles')
       .select('id')
       .limit(1)

@@ -641,12 +641,12 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
         </Button>
       </div>
 
-        {process.env.NODE_ENV !== 'production' && lastApiResponse && (
+        {process.env.NODE_ENV !== 'production' && lastApiResponse ? (
           <div className="max-w-3xl mx-auto mt-4 p-3 rounded-md bg-red-50 text-sm text-red-900">
             <div className="font-medium mb-2">API Response (dev)</div>
             <pre className="whitespace-pre-wrap break-words text-xs max-h-48 overflow-auto">{JSON.stringify(lastApiResponse, null, 2)}</pre>
           </div>
-        )}
+        ) : null}
     </div>
   )
 }

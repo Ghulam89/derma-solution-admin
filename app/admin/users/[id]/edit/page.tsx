@@ -100,8 +100,8 @@ export default function EditUserPage() {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         phone,
-        gender: gender || null,
-        address: address || null,
+        gender: gender || undefined,
+        address: address || undefined,
         role,
       }
 
