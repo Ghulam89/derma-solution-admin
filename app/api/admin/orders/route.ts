@@ -74,8 +74,9 @@ export async function GET(req: NextRequest) {
       page,
       pageSize 
     }, { status: 200 })
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
 
@@ -244,7 +245,7 @@ export async function POST(req: NextRequest) {
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
     }
 
-    function parseBookingDate(raw: any) {
+    function parseBookingDate(raw: unknown) {
       if (!raw) return null
       if (typeof raw === 'string') {
         const isoMatch = raw.match(/^\d{4}-\d{2}-\d{2}$/)
@@ -261,7 +262,7 @@ export async function POST(req: NextRequest) {
       return toLocalISO(parsed)
     }
 
-    function parseBookingTime(raw: any) {
+    function parseBookingTime(raw: unknown) {
       if (!raw) return null
       const s = String(raw).trim().toLowerCase()
       const ampmMatch = s.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i)
@@ -427,8 +428,9 @@ export async function POST(req: NextRequest) {
       created: results,
       errors: errors.length > 0 ? errors : undefined
     }, { status: 201 })
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
 

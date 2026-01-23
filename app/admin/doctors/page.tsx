@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import ClientDoctorsSection from "./_client-doctors-section"
+import type { Doctor } from "@/types"
 
 async function getDoctors() {
   const supabase = await createClient()
@@ -12,7 +13,7 @@ async function getDoctors() {
     // Check if table doesn't exist
     if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
       // Return error object instead of empty array so client can handle it
-      return { error: "Table does not exist", message: error.message } as any
+      return { error: "Table does not exist", message: error.message } as { error: string; message?: string }
     }
     console.error("Error fetching doctors:", error)
     return []
@@ -31,7 +32,7 @@ export default async function DoctorsPage() {
           <p className="text-muted-foreground">Manage your doctors and medical staff</p>
         </div>
       </div>
-      <ClientDoctorsSection initialDoctors={doctorsOrError as any} />
+      <ClientDoctorsSection initialDoctors={doctorsOrError as Doctor[] | { error: string; message?: string }} />
     </div>
   )
 }

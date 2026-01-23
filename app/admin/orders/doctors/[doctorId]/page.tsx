@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createClient } from "@/lib/supabase/server"
 import { OrdersTable } from "@/components/admin/orders-table"
+import type { Order } from "@/types"
 import Link from "next/link"
 import { ArrowLeft, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -56,7 +57,7 @@ async function OrdersListByDoctor({ doctorId, page }: { doctorId: string; page: 
 
   return (
     <OrdersTable 
-      orders={(data || []) as any} 
+      orders={(data || []) as Order[]} 
       currentPage={page} 
       totalCount={count || 0} 
       pageSize={20} 

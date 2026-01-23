@@ -25,7 +25,7 @@ export default function NewDoctorPage() {
   const [phone, setPhone] = useState("")
   const [specialization, setSpecialization] = useState("")
   const [bio, setBio] = useState("")
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [, setImageFile] = useState<File | null>(null)
   const [imageUrl, setImageUrl] = useState("")
   const [isActive, setIsActive] = useState(true)
 
@@ -132,10 +132,11 @@ export default function NewDoctorPage() {
 
       // Navigate back to doctors page
       router.push("/admin/doctors")
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create doctor"
       toast({
         title: "Error",
-        description: error.message || "Failed to create doctor",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

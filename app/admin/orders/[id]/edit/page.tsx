@@ -79,10 +79,11 @@ export default function EditOrderPage() {
         setBookingTime(orderData.booking_time?.slice(0, 5) || '00:00')
         setNotes(orderData.notes || '')
         setDoctorId(orderData.doctor_id || '')
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load order"
         toast({
           title: "Error",
-          description: error.message || "Failed to load order",
+          description: errorMessage,
           variant: "destructive",
         })
         router.push("/admin/orders")
@@ -205,10 +206,11 @@ export default function EditOrderPage() {
 
       // Navigate back to orders page
       router.push("/admin/orders")
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update order"
       toast({
         title: "Error",
-        description: error.message || "Failed to update order",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

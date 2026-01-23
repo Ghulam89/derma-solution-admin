@@ -63,12 +63,13 @@ export async function POST(request: NextRequest) {
     let body
     try {
       body = await request.json()
-    } catch (jsonError: any) {
+    } catch (jsonError: unknown) {
+      const errorMessage = jsonError instanceof Error ? jsonError.message : 'Could not parse request body'
       return NextResponse.json(
         {
           success: false,
           error: 'Invalid JSON in request body',
-          details: jsonError.message || 'Could not parse request body',
+          details: errorMessage,
           hint: 'Make sure you are sending valid JSON with Content-Type: application/json header',
         },
         { status: 400 }
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists by querying profiles table
-    const { data: existingProfile, error: profileCheckError } = await supabaseAdmin
+    const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
       .select('id, email')
       .eq('email', email)
@@ -167,12 +168,13 @@ export async function POST(request: NextRequest) {
       })
       newUser = result.data
       createError = result.error
-    } catch (err: any) {
-      console.error('Error in auth.admin.createUser:', err)
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Network error'
+      console.error('Error in auth.admin.createUser:', errorMessage)
       return NextResponse.json(
         {
           success: false,
-          error: `Failed to connect to Supabase: ${err.message || 'Network error'}`,
+          error: `Failed to connect to Supabase: ${errorMessage}`,
           details: 'Please check your NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local',
           hint: 'Make sure your dev server is running and environment variables are loaded correctly',
         },
@@ -225,12 +227,13 @@ export async function POST(request: NextRequest) {
         password: '*** (use the password you provided)',
       },
     })
-  } catch (error: any) {
-    console.error('Error creating admin user:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+    console.error('Error creating admin user:', errorMessage)
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'An unexpected error occurred',
+        error: errorMessage,
       },
       { status: 500 }
     )

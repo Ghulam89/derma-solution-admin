@@ -47,6 +47,7 @@ export default function NewBookingPage() {
   useEffect(() => {
     loadServices()
     loadDoctors()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Auto-select doctor if coming from doctor's bookings page
@@ -77,7 +78,7 @@ export default function NewBookingPage() {
   const selectedService = services.find((s) => s.id === selectedServiceId)
   
   // Parse session_options from service to determine max sessions
-  const parseSessionOptions = (raw: any): string[] => {
+  const parseSessionOptions = (raw: unknown): string[] => {
     if (!raw) return []
     if (Array.isArray(raw)) return raw
     try {
@@ -136,7 +137,7 @@ export default function NewBookingPage() {
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load services",
@@ -226,10 +227,11 @@ export default function NewBookingPage() {
 
       // Navigate back to orders page
       router.push("/admin/orders")
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create booking"
       toast({
         title: "Error",
-        description: error.message || "Failed to create booking",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

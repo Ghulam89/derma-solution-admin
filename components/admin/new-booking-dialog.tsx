@@ -43,7 +43,7 @@ export function NewBookingDialog({
   const [loadingDoctors, setLoadingDoctors] = useState(false)
   const [searchingCustomers, setSearchingCustomers] = useState(false)
   const [customerSearchQuery, setCustomerSearchQuery] = useState("")
-  const [customerSearchResults, setCustomerSearchResults] = useState<any[]>([])
+  const [customerSearchResults, setCustomerSearchResults] = useState<Array<{ id: string; email: string; first_name?: string; last_name?: string }>>([])
   const [showCustomerSearch, setShowCustomerSearch] = useState(false)
   const customerSearchRef = useRef<HTMLDivElement>(null)
 
@@ -103,6 +103,7 @@ export function NewBookingDialog({
       setAddress("")
       setNotes("")
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultDoctorId])
 
   const loadDoctors = async () => {
@@ -153,7 +154,7 @@ export function NewBookingDialog({
     }
   }
 
-  const selectCustomer = (customer: any) => {
+  const selectCustomer = (customer: { id: string; email: string; first_name?: string; last_name?: string; phone?: string; phone_number?: string }) => {
     setCustomerId(customer.id)
     setCustomerName(`${customer.first_name || ''} ${customer.last_name || ''}`.trim())
     setCustomerEmail(customer.email || '')
@@ -167,7 +168,7 @@ export function NewBookingDialog({
   const selectedService = services.find((s) => s.id === selectedServiceId)
   
   // Parse session_options from service to determine max sessions
-  const parseSessionOptions = (raw: any): string[] => {
+  const parseSessionOptions = (raw: unknown): string[] => {
     if (!raw) return []
     if (Array.isArray(raw)) return raw
     try {
@@ -226,7 +227,7 @@ export function NewBookingDialog({
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load services",
@@ -333,10 +334,11 @@ export function NewBookingDialog({
 
       onOpenChange(false)
       onBookingCreated?.()
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create booking"
       toast({
         title: "Error",
-        description: error.message || "Failed to create booking",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

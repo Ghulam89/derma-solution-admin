@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast"
 import ServiceDateSelector from "@/components/services/ServiceDateSelector"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
@@ -22,7 +21,7 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   const { toast } = useToast();
   
   // Parse session_options from service to determine max sessions
-  const parseSessionOptions = (raw: any): string[] => {
+  const parseSessionOptions = (raw: unknown): string[] => {
     if (!raw) return []
     if (Array.isArray(raw)) return raw
     try {
@@ -65,7 +64,7 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
   const [loadingDoctors, setLoadingDoctors] = useState(false)
   const [userInteracted, setUserInteracted] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [lastApiResponse, setLastApiResponse] = useState<any>(null)
+  const [lastApiResponse, setLastApiResponse] = useState<unknown>(null)
 
   // receive selection updates from ServiceDateSelector
   useEffect(() => {
@@ -135,30 +134,31 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
     pricing: PricingOption[]
   }
   
-  const parseTreatmentSubcategories = (v: any): TreatmentSubcategory[] => {
+  const parseTreatmentSubcategories = (v: unknown): TreatmentSubcategory[] => {
     if (!v) return []
     try {
       const parsed = typeof v === 'string' ? JSON.parse(v) : v
       if (!Array.isArray(parsed)) return []
       // Migrate old format to new format
-      return parsed.map((item: any) => {
-        if (item.title && item.price && !item.pricing) {
+      return parsed.map((item: unknown) => {
+        const typedItem = item as Record<string, unknown>
+        if (typedItem.title && typedItem.price && !typedItem.pricing) {
           return {
-            name: item.title,
-            image: item.image || "",
-            pricing: [{ name: "Standard", price: item.price }]
+            name: String(typedItem.title),
+            image: String(typedItem.image || ""),
+            pricing: [{ name: "Standard", price: Number(typedItem.price) }]
           }
         }
         return {
-          name: item.name || item.title || "",
-          image: item.image || "",
-          pricing: Array.isArray(item.pricing) ? item.pricing : []
+          name: String(typedItem.name || typedItem.title || ""),
+          image: String(typedItem.image || ""),
+          pricing: Array.isArray(typedItem.pricing) ? typedItem.pricing as PricingOption[] : []
         }
       })
     } catch { return [] }
   }
   
-  const treatmentSubcategories = parseTreatmentSubcategories((service as any)?.treatment_options)
+  const treatmentSubcategories = parseTreatmentSubcategories((service as Service & { treatment_options?: unknown })?.treatment_options)
   const hasTreatmentSubcategories = treatmentSubcategories.length > 0
   
   // State for selected treatment subcategories and pricing options
@@ -401,19 +401,6 @@ export default function BookingPanel({ service, rescheduleOrder }: { service: Se
                               onError={(e) => {
                                 console.error('Image failed to load:', subcat.image)
                                 // Fallback to regular img tag if Next Image fails
-                                const target = e.target as HTMLImageElement
-                                if (target) {
-                                  target.style.display = 'none'
-                                }
-                              }}
-                            />
-                            {/* Fallback img tag for better compatibility */}
-                            <img
-                              src={subcat.image}
-                              alt={subcat.name}
-                              className="absolute inset-0 w-full h-full object-cover"
-                              onError={(e) => {
-                                console.error('Fallback image also failed:', subcat.image)
                                 const target = e.target as HTMLImageElement
                                 if (target) {
                                   target.style.display = 'none'

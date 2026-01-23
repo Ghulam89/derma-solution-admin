@@ -39,7 +39,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     'role',
   ] as const
 
-  const updates: Record<string, any> = {}
+  const updates: Record<string, unknown> = {}
   for (const key of allowedFields) {
     if (key in body) {
       updates[key] = body[key]

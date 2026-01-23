@@ -62,10 +62,11 @@ export default function EditUserPage() {
         setGender(data.gender || "")
         setAddress(data.address || "")
         setRole((data.role as "customer" | "admin") || "customer")
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load user"
         toast({
           title: "Error",
-          description: error.message || "Failed to load user",
+          description: errorMessage,
           variant: "destructive",
         })
         router.push("/admin/users")
@@ -99,8 +100,8 @@ export default function EditUserPage() {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         phone,
-        gender: gender || null as any,
-        address: address || null as any,
+        gender: gender || null,
+        address: address || null,
         role,
       }
 
@@ -127,10 +128,11 @@ export default function EditUserPage() {
       })
 
       router.push("/admin/users")
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update user"
       toast({
         title: "Error",
-        description: error.message || "Failed to update user",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

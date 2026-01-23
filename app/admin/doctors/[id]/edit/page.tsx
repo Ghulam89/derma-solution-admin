@@ -31,7 +31,7 @@ export default function EditDoctorPage() {
   const [phone, setPhone] = useState("")
   const [specialization, setSpecialization] = useState("")
   const [bio, setBio] = useState("")
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [, setImageFile] = useState<File | null>(null)
   const [imageUrl, setImageUrl] = useState("")
   const [isActive, setIsActive] = useState(true)
 
@@ -64,10 +64,11 @@ export default function EditDoctorPage() {
         setBio(foundDoctor.bio || "")
         setImageUrl(foundDoctor.avatar_url || "")
         setIsActive(foundDoctor.is_active ?? true)
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load doctor"
         toast({
           title: "Error",
-          description: error.message || "Failed to load doctor",
+          description: errorMessage,
           variant: "destructive",
         })
         router.push("/admin/doctors")
@@ -184,10 +185,11 @@ export default function EditDoctorPage() {
 
       // Navigate back to doctors page
       router.push("/admin/doctors")
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update doctor"
       toast({
         title: "Error",
-        description: error.message || "Failed to update doctor",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

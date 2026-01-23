@@ -10,8 +10,8 @@ export default function ProfileSettingsPage() {
   const supabase = createClient()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<any | null>(null)
-  const [profile, setProfile] = useState<any | null>(null)
+  const [user, setUser] = useState<{ id: string; email?: string | null } | null>(null)
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null)
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -52,6 +52,7 @@ export default function ProfileSettingsPage() {
     }
     load()
     return () => { mounted = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleChange = (k: string, v: string) => setForm((s) => ({ ...s, [k]: v }))
@@ -89,7 +90,7 @@ export default function ProfileSettingsPage() {
       }
 
       // update profiles table
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         id: user.id,
         email: form.email || user.email,
         first_name: form.first_name || null,
@@ -104,7 +105,7 @@ export default function ProfileSettingsPage() {
         if (profile && Object.prototype.hasOwnProperty.call(profile, 'address')) {
           updates.address = form.address || null
         }
-      } catch (e) {
+      } catch {
         // defensive: if profile is not an object, skip address
       }
       const { error } = await supabase.from('profiles').upsert(updates)
@@ -116,7 +117,7 @@ export default function ProfileSettingsPage() {
         await invalidateUsersCache()
         try {
           clearUsersClientCache()
-        } catch (e) {
+        } catch {
           // ignore if clearing client cache fails
         }
       }
