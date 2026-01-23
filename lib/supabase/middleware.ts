@@ -34,6 +34,13 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Polyfill process.version for Edge Runtime compatibility
+  if (typeof process === 'undefined') {
+    (globalThis as any).process = { version: 'v18.0.0' }
+  } else if (!(process as any).version) {
+    (process as any).version = 'v18.0.0'
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
