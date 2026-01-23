@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getOrdersPaginated } from "@/lib/supabase/queries"
 
 /**
  * Admin API endpoint to get all bookings
@@ -357,7 +356,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Calculate pricing if not provided
-      let sessionCount = bookingData.session_count || 1
+      const sessionCount = bookingData.session_count || 1
       let unitPrice = bookingData.unit_price
       let discountPercent = bookingData.discount_percent || 0
       let totalAmount = bookingData.total_amount
